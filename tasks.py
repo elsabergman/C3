@@ -1,10 +1,18 @@
-
+from flask import Flask
 from celery import Celery
-import json 
+import json
 
-app = Celery('tasks', backend='rpc://', broker='pyamqp://')
 
-@app.task
+app = Flask(__name__)
+app.config["CELERY_BROKER_URL"] = 'pyamqp://' 
+app.config["CELERY_RESULT_BACKEND"] = 'rpc://'
+celery = Celery(app.name, broker = app.config["CELERY_BROKER_URL"]) 
+
+#app = Celery('tasks', backend='rpc://', broker='pyamqp://')
+
+celery.conf.update(app.config)
+
+@celery.task
 def readfile():
 
     file = open("0c7526e6-ce8c-4e59-884c-5a15bbca5eb3","r")
@@ -12,9 +20,12 @@ def readfile():
     read_file = read_file.split('\n\n')
     tweet = []
     for t in range(0,len(read_file)-1):
+    #for t in range(500):
        json_tweet = json.loads(read_file[t])
        tweet.append(json_tweet["text"])
     return(tweet)
+
+@celery.task
 def countpronoun():
 
     tweets = readfile()
@@ -29,7 +40,7 @@ def countpronoun():
         if "han" in t:
             pronouns["han"]  += 1
         if "den" in t:
-            pronouns["den"] +=1 
+            pronouns["den"] +=1
         if "det" in t:
             pronouns["det"]  += 1
         if "denne" in t:
@@ -37,11 +48,20 @@ def countpronoun():
 
         if "denna" in t:
             pronouns["denna"] +=1
-    print(pronouns)
+    json_pronoun = json.dumps(pronouns)
+    return json_pronoun
+
 def createfile():
 
     with open('data.txt', 'w') as outfile:
         json.dump(data, outfile)
 
     return data
+
+@app.route('/countpronouns', methods=['GET'])
+def mainfunction(): 
+	return countpronoun()
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0',debug=True)
 
