@@ -1,28 +1,39 @@
+
+
 from flask import Flask
 from celery import Celery
+import os
 import json
 
+appl = Flask(__name__)
 
-app = Flask(__name__)
-app.config["CELERY_BROKER_URL"] = 'pyamqp://' 
-app.config["CELERY_RESULT_BACKEND"] = 'rpc://'
-celery = Celery(app.name, broker = app.config["CELERY_BROKER_URL"]) 
+appl.config['CELERY_BROKER_URL'] ='pyamqp://'
 
-#app = Celery('tasks', backend='rpc://', broker='pyamqp://')
+appl.config['CELERY_RESULT_BACKEND'] ='rpc://'
 
-celery.conf.update(app.config)
+celery = Celery(appl.name, broker=appl.config['CELERY_BROKER_URL'])
+celery.conf.update(appl.config)
 
+#@celery.task
+def openTweetsFile():
+
+    file = open("tweets.txt","r")
+    read_file = file.read()
+    listofFiles = read_file.split('\n')
+    listofFiles = listofFiles[:-1]
+    return listofFiles
 @celery.task
 def readfile():
-
-    file = open("0c7526e6-ce8c-4e59-884c-5a15bbca5eb3","r")
-    read_file = file.read()
-    read_file = read_file.split('\n\n')
-    tweet = []
-    for t in range(0,len(read_file)-1):
+    #file = openTweetsFile()
+    for f in range(0,len(file)-1):
+        file = open("0c7526e6-ce8c-4e59-884c-5a15bbca5eb3","r")
+        read_file = file.read()
+        read_file = read_file.split('\n\n')
+        tweet = []
+        for t in range(0,len(read_file)-1):
     #for t in range(500):
-       json_tweet = json.loads(read_file[t])
-       tweet.append(json_tweet["text"])
+           json_tweet = json.loads(read_file[t])
+           tweet.append(json_tweet["text"])
     return(tweet)
 
 @celery.task
@@ -51,17 +62,16 @@ def countpronoun():
     json_pronoun = json.dumps(pronouns)
     return json_pronoun
 
-def createfile():
 
-    with open('data.txt', 'w') as outfile:
-        json.dump(data, outfile)
+@appl.route('/countpronouns', methods=['GET'])
+def main():
+    pronouns = countpronoun.delay()
+    while pronouns.ready() == False:
+         if pronouns.ready() == True:
+            result = pronouns.get(timeout=1)
+#	    return(result)
+    return(result)
 
-    return data
-
-@app.route('/countpronouns', methods=['GET'])
-def mainfunction(): 
-	return countpronoun()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',debug=True)
-
+    appl.run(host='0.0.0.0',debug=True)
