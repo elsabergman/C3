@@ -19,23 +19,33 @@ def openTweetsFile():
 
     file = open("tweets.txt","r")
     read_file = file.read()
+    read_file = read_file.strip()
     listofFiles = read_file.split('\n')
-    listofFiles = listofFiles[:-1]
     return listofFiles
+
 @celery.task
 def readfile():
-    #file = openTweetsFile()
-    for f in range(0,len(file)-1):
-        file = open("0c7526e6-ce8c-4e59-884c-5a15bbca5eb3","r")
-        read_file = file.read()
+    file = openTweetsFile()
+    tweet = []
+    for f in file:
+        thefile = open("0c7526e6-ce8c-4e59-884c-5a15bbca5eb3","r")
+        read_file = thefile.read()
         read_file = read_file.split('\n\n')
-        tweet = []
-        for t in range(0,len(read_file)-1):
-    #for t in range(500):
+	for t in range(4):
+        #for t in range(0,len(read_file)-1):
            json_tweet = json.loads(read_file[t])
            tweet.append(json_tweet["text"])
+
     return(tweet)
 
+@celery.task
+def removeRT():
+    tweets = readfile()
+    tweetsNoRT = []
+    for t in tweets:
+        if t.startswith("RT ") == False:
+	    tweetsNoRT.append(t)
+    return(tweetsNoRT)
 @celery.task
 def countpronoun():
 
