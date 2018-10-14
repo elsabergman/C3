@@ -1,10 +1,9 @@
 
-
 from flask import Flask
 from celery import Celery
 import os
 import json
-
+import re
 appl = Flask(__name__)
 
 appl.config['CELERY_BROKER_URL'] ='pyamqp://'
@@ -14,7 +13,7 @@ appl.config['CELERY_RESULT_BACKEND'] ='rpc://'
 celery = Celery(appl.name, broker=appl.config['CELERY_BROKER_URL'])
 celery.conf.update(appl.config)
 
-#@celery.task
+@celery.task
 def openTweetsFile():
 
     file = open("tweets.txt","r")
@@ -28,11 +27,11 @@ def readfile():
     file = openTweetsFile()
     tweet = []
     for f in file:
-        thefile = open("0c7526e6-ce8c-4e59-884c-5a15bbca5eb3","r")
+
+        thefile = open(f,"r")
         read_file = thefile.read()
         read_file = read_file.split('\n\n')
-	for t in range(4):
-        #for t in range(0,len(read_file)-1):
+       	for t in range(0,len(read_file)-1):
            json_tweet = json.loads(read_file[t])
            tweet.append(json_tweet["text"])
 
@@ -46,42 +45,42 @@ def removeRT():
         if t.startswith("RT ") == False:
 	    tweetsNoRT.append(t)
     return(tweetsNoRT)
+
 @celery.task
 def countpronoun():
 
-    tweets = readfile()
+    tweets = removeRT()
     pronouns = {"hon":0, "han":0, "hen":0, "den":0,"det":0,"denna":0, "denne":0}
-
-    for t in tweets:
-        if "hon" in t:
- 	   pronouns["hon"] += 1
-        if "hen" in t:
-            pronouns["hen"]+= 1
-
-        if "han" in t:
-            pronouns["han"]  += 1
-        if "den" in t:
-            pronouns["den"] +=1
-        if "det" in t:
-            pronouns["det"]  += 1
-        if "denne" in t:
-            pronouns["denne"] +=1
-
-        if "denna" in t:
-            pronouns["denna"] +=1
+#    strings = ["denne! och hon er en han och HEN", "denna tjej", "Han. han bor"]
+    for line in tweets:
+	for word in line.split():
+	    word = re.sub(r"[^a-zA-Z0-9]+",'', word)
+            word = word.lower()
+	    print(word)
+            if "hon" == word:
+	        pronouns["hon"] += 1
+            if "hen" == word:
+                pronouns["hen"]+= 1
+            if "han" == word:
+                pronouns["han"]  += 1
+            if "den" == word:
+                pronouns["den"] +=1
+            if "det" == word:
+                pronouns["det"]  += 1
+            if "denne" == word:
+                pronouns["denne"] +=1
+            if "denna" == word:
+                pronouns["denna"] +=1
     json_pronoun = json.dumps(pronouns)
     return json_pronoun
-
-
-@appl.route('/countpronouns', methods=['GET'])
+@appl.route("/countpronouns", methods=['GET'])
 def main():
-    pronouns = countpronoun.delay()
-    while pronouns.ready() == False:
-         if pronouns.ready() == True:
-            result = pronouns.get(timeout=1)
-#	    return(result)
-    return(result)
-
+     pronouns = countpronoun.delay()
+     while pronouns.ready() == False:
+         continue
+     if pronouns.ready() == True:
+         result = pronouns.get(timeout=1)
+         return(result)
 
 if __name__ == '__main__':
     appl.run(host='0.0.0.0',debug=True)
