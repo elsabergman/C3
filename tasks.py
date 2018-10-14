@@ -51,7 +51,6 @@ def countpronoun():
 
     tweets = removeRT()
     pronouns = {"hon":0, "han":0, "hen":0, "den":0,"det":0,"denna":0, "denne":0}
-#    strings = ["denne! och hon er en han och HEN", "denna tjej", "Han. han bor"]
     for line in tweets:
 	for word in line.split():
 	    word = re.sub(r"[^a-zA-Z0-9]+",'', word)
@@ -71,8 +70,9 @@ def countpronoun():
                 pronouns["denne"] +=1
             if "denna" == word:
                 pronouns["denna"] +=1
-    json_pronoun = json.dumps(pronouns)
-    return json_pronoun
+    #json_pronoun = json.dumps(pronouns)
+    #return json_pronoun
+    print(pronouns)
 @appl.route("/countpronouns", methods=['GET'])
 def main():
      pronouns = countpronoun.delay()
