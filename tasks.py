@@ -23,6 +23,17 @@ def openTweetsFile():
     return listofFiles
 
 @celery.task
+def testfile():
+    tweet = []
+    thefile = open("test.txt","r")
+    read_file = thefile.read()
+    read_file = read_file.split('\n\n')
+    for t in range(0,len(read_file)):
+        json_tweet = json.loads(read_file[t])
+        tweet.append(json_tweet["text"])
+
+    return(tweet)
+@celery.task
 def readfile():
     file = openTweetsFile()
     tweet = []
@@ -55,7 +66,6 @@ def countpronoun():
 	for word in line.split():
 	    word = re.sub(r"[^a-zA-Z0-9]+",'', word)
             word = word.lower()
-	    print(word)
             if "hon" == word:
 	        pronouns["hon"] += 1
             if "hen" == word:
@@ -70,9 +80,8 @@ def countpronoun():
                 pronouns["denne"] +=1
             if "denna" == word:
                 pronouns["denna"] +=1
-    #json_pronoun = json.dumps(pronouns)
-    #return json_pronoun
-    print(pronouns)
+    json_pronoun = json.dumps(pronouns)
+    return json_pronoun
 @appl.route("/countpronouns", methods=['GET'])
 def main():
      pronouns = countpronoun.delay()
