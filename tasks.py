@@ -57,6 +57,14 @@ def removeRT():
 	    tweetsNoRT.append(t)
     return(tweetsNoRT)
 
+def tweetCount():
+    tweets = removeRT()
+    tweetCount = 0
+    for t in tweets:
+        tweetCount += 1
+    return tweetCount
+
+
 @celery.task
 def countpronoun():
 
@@ -89,7 +97,7 @@ def main():
          continue
      if pronouns.ready() == True:
          result = pronouns.get(timeout=1)
-         return(result)
+         return(result + "\n")
 
 if __name__ == '__main__':
     appl.run(host='0.0.0.0',debug=True)
