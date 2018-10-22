@@ -24,15 +24,15 @@ def openTweetsFile():
     listofFiles = read_file.split('\n')
     return listofFiles
 
-@celery.task
-def testfile():
-    tweet = []
-    thefile = open("test.txt","r")
-    read_file = thefile.read()
-    read_file = read_file.split('\n\n')
-    for t in range(0,len(read_file)):
-        json_tweet = json.loads(read_file[t])
-        tweet.append(json_tweet["text"])
+#@celery.task
+#def testfile():
+#    tweet = []
+#    thefile = open("test.txt","r")
+#    read_file = thefile.read()
+#    read_file = read_file.split('\n\n')
+#    for t in range(0,len(read_file)):
+#        json_tweet = json.loads(read_file[t])
+#        tweet.append(json_tweet["text"])
 
     return(tweet)
 @celery.task
