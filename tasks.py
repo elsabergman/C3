@@ -6,12 +6,14 @@ import json
 import re
 appl = Flask(__name__)
 
-appl.config['CELERY_BROKER_URL'] ='pyamqp://'
+#appl.config['CELERY_BROKER_URL'] ='pyamqp://'
 
-appl.config['CELERY_RESULT_BACKEND'] ='rpc://'
+#appl.config['CELERY_RESULT_BACKEND'] ='rpc://'
 
-celery = Celery(appl.name, broker=appl.config['CELERY_BROKER_URL'])
-celery.conf.update(appl.config)
+#celery = Celery(appl.name, broker=appl.config['CELERY_BROKER_URL'])
+
+celery = Celery('tasks'', backend='rpc://', broker = 'pyamqp://')
+#celery.conf.update(appl.config)
 
 @celery.task
 def openTweetsFile():
