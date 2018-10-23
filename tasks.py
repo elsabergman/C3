@@ -51,7 +51,7 @@ def removeRT():
         if t.startswith("RT ") == False:
 	    tweetsNoRT.append(t)
     return(tweetsNoRT)
-
+@celery.task
 def tweetCount():
     tweets = removeRT()
     tweetCount = 0
