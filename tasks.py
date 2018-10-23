@@ -27,7 +27,7 @@ def openTweetsFile():
 #        json_tweet = json.loads(read_file[t])
 #        tweet.append(json_tweet["text"])
 
-    return(tweet)
+#    return(tweet)
 @celery.task
 def readfile():
     file = openTweetsFile()
